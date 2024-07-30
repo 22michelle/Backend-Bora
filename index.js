@@ -16,7 +16,8 @@ import linkRoutes from "./src/routes/link.routes.js";
 connectDB();
 
 const app = express();
-app.set("Port", 4000);
+const PORT = process.env.PORT || 4000;
+const HOST = process.env.HOST || "0.0.0.0";
 
 app.use(morgan("dev"));
 app.use(
@@ -34,6 +35,6 @@ app.use("/user", userRoutes);
 app.use("/transaction", transactionRoutes);
 app.use("/link", linkRoutes);
 
-app.listen(app.get("Port"), () => {
-  console.log("Server listening on the port:", app.get("Port"));
+app.listen(PORT, HOST, () => {
+  console.log(`Server listening on http://${HOST}:${PORT}`);
 });
