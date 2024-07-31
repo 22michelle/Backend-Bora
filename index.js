@@ -11,7 +11,7 @@ import linkRoutes from "./src/routes/link.routes.js";
 connectDB();
 
 const app = express();
-const port = process.env.PORT || 4000;
+app.set("Port", 4000);
 
 app.use(morgan("dev"));
 app.use(
@@ -23,16 +23,15 @@ app.use(
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// Rutas
+// Routes
 app.use("/user", userRoutes);
 app.use("/transaction", transactionRoutes);
 app.use("/link", linkRoutes);
 
-// Ruta raíz (opcional, solo para verificación)
 app.get("/", (req, res) => {
   res.send("Backend is working!");
 });
 
-app.listen(port, () => {
-  console.log(`Server listening on port ${port}`);
+app.listen(app.get("Port"), () => {
+  console.log(`Server listening on port:`, app.get("Port"));
 });
