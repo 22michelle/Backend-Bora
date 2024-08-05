@@ -9,6 +9,7 @@ router.post("/register", userCtrl.register);
 router.post("/login", userCtrl.login);
 
 // Private routes
+router.get("/profile", userCtrl.getUserProfile); 
 router.get("/:userId", userCtrl.getUserById); 
 router.get("/token/:token", userCtrl.getUserByToken);
 router.get("/email/:email", userCtrl.getUserByEmail);

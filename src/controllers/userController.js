@@ -42,7 +42,7 @@ userCtrl.register = async (req, res) => {
       expires: new Date(Date.now() + 3600000), // 1 hour
     });
     response(
-      res, 
+      res,
       201,
       true,
       { ...newUser.toJSON(), token },
@@ -57,6 +57,7 @@ userCtrl.login = async (req, res) => {
   try {
     const { password, email } = req.body;
     const user = await UserModel.findOne({ email });
+
     if (user && bcrypt.compareSync(password, user.password)) {
       // Generate token with user ID
       const token = user.generateAuthToken();
@@ -73,6 +74,7 @@ userCtrl.login = async (req, res) => {
     response(res, 500, false, null, error.message);
   }
 };
+
 // Delete User
 userCtrl.deleteUser = async (req, res) => {
   try {

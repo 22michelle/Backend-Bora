@@ -13,7 +13,6 @@ connectDB();
 
 const app = express();
 app.set("Port", 4000);
-
 app.use(cookieParser());
 app.use(morgan("dev"));
 app.use(
