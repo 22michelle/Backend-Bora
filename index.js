@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import morgan from "morgan";
 import { connectDB } from "./database.js";
+import cookieParser from "cookie-parser";
 
 // Routes
 import userRoutes from "./src/routes/user.routes.js";
@@ -13,6 +14,7 @@ connectDB();
 const app = express();
 app.set("Port", 4000);
 
+app.use(cookieParser());
 app.use(morgan("dev"));
 app.use(
   cors({
