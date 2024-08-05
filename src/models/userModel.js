@@ -112,10 +112,9 @@ UserSchema.methods.matchPassword = async function (enteredPassword) {
 };
 
 // Method to generate JWT
-UserSchema.methods.generateAuthToken = function () {
-  return jwt.sign({ id: this._id }, process.env.KEYWORD_TOKEN, {
-    expiresIn: "300d",
-  });
+userSchema.methods.generateAuthToken = function() {
+  const token = jwt.sign({ user: this._id }, process.env.KEYWORD_TOKEN, { expiresIn: '1h' });
+  return token;
 };
 
 // Add pagination plugin

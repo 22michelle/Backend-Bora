@@ -139,6 +139,11 @@ userCtrl.getUserByToken = async (req, res) => {
     const decoded = jwt.verify(token, process.env.KEYWORD_TOKEN);
     const userId = decoded.user;
 
+    // Ensure userId is a valid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return response(res, 400, false, "", "Invalid user ID");
+    }
+
     const user = await UserModel.findById(userId).select("-password");
 
     if (!user) {
