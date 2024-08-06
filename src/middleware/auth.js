@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import { response } from "../helpers/Response.js";
-import { UserModel } from "../models/userModel.js";
+// import { UserModel } from "../models/userModel.js";
 
 const messageNoAuth = (res) => {
   response(res, 401, false, "", "Not authorized to enter");

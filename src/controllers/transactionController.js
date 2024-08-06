@@ -422,4 +422,19 @@ transactionCtrl.getAllTransactions = async (req, res) => {
   }
 };
 
+// Get transaction by ID
+transactionCtrl.getTransactionById = async (req, res) => {
+  try {
+    const transaction = await TransactionModel.findById(req.params.transactionId);
+
+    if (!transaction) {
+      return response(res, 404, false, "", "Transaction not found");
+    }
+
+    response(res, 200, true, { ...transaction._doc, password: null }, "Transaction found");
+  } catch (error) {
+    response(res, 500, false, null, error.message);
+  }
+};
+
 export default transactionCtrl;

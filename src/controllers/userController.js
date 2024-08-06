@@ -1,8 +1,6 @@
 import { response } from "../helpers/Response.js";
 import { UserModel } from "../models/userModel.js";
 import bcrypt from "bcrypt";
-import { generateToken } from "../helpers/generateToken.js";
-import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 
 const userCtrl = {};
@@ -36,22 +34,18 @@ userCtrl.register = async (req, res) => {
     }
     const newUser = new UserModel({ name, email, password });
     await newUser.save();
-    const token = newUser.generateAuthToken(); // Generate token with userId
-    res.cookie("access_token", token, {
-      httpOnly: true,
-      expires: new Date(Date.now() + 3600000), // 1 hour
-    });
     response(
       res,
       201,
       true,
-      { ...newUser.toJSON(), token },
+      { ...newUser.toJSON() },
       "Registration successful"
     );
   } catch (error) {
     response(res, 500, false, null, error.message);
   }
 };
+
 // Login
 userCtrl.login = async (req, res) => {
   try {
@@ -59,13 +53,11 @@ userCtrl.login = async (req, res) => {
     const user = await UserModel.findOne({ email });
 
     if (user && bcrypt.compareSync(password, user.password)) {
-      // Generate token with user ID
-      const token = user.generateAuthToken();
       return response(
         res,
         200,
         true,
-        { ...user.toJSON(), password: null, token },
+        { ...user.toJSON(), password: null },
         "Welcome to Bora"
       );
     }
@@ -123,41 +115,6 @@ userCtrl.getAllUsers = async (req, res) => {
     const users = await UserModel.find();
     response(res, 200, true, users, "Users obtained successfully");
   } catch (error) {
-    response(res, 500, false, null, error.message);
-  }
-};
-
-// Get User by Token
-userCtrl.getUserByToken = async (req, res) => {
-  try {
-    const { token } = req.params;
-
-    if (!token) {
-      return response(res, 400, false, "", "Token is required");
-    }
-
-    const decoded = jwt.verify(token, process.env.KEYWORD_TOKEN);
-    const userId = decoded.user;
-
-    // Ensure userId is a valid ObjectId
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return response(res, 400, false, "", "Invalid user ID");
-    }
-
-    const user = await UserModel.findById(userId).select("-password");
-
-    if (!user) {
-      return response(res, 404, false, "", "User not found");
-    }
-
-    response(res, 200, true, { ...user._doc, token }, "User found");
-  } catch (error) {
-    if (error.name === "JsonWebTokenError") {
-      return response(res, 401, false, "", "Invalid token");
-    }
-    if (error.name === "TokenExpiredError") {
-      response(res, 401, false, null, "The token has expired");
-    }
     response(res, 500, false, null, error.message);
   }
 };

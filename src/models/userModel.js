@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
 import mongoosePaginate from "mongoose-paginate-v2";
 
 const { Schema, model } = mongoose;
@@ -109,13 +108,6 @@ UserSchema.pre("save", async function (next) {
 // Method to compare passwords
 UserSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
-};
-
-// Method to generate JWT
-UserSchema.methods.generateAuthToken = function () {
-  return jwt.sign({ id: this._id }, process.env.KEYWORD_TOKEN, {
-    expiresIn: "300d",
-  });
 };
 
 // Add pagination plugin
