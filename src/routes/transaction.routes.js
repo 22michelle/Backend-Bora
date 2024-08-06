@@ -7,6 +7,6 @@ const router = new Router();
 // Routes
 router.post("/transaction",  transationCtrl.createTransaction);
 router.get("/transactions", transationCtrl.getAllTransactions);
-router.get("/:transactionId", transationCtrl.getTransactionById);
+router.get("/user/:userId/transactions", transationCtrl.getTransactionsByUserId);
 
 export default router;

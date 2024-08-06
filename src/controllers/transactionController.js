@@ -60,6 +60,17 @@ const initializeUsers = async () => {
 // Call initializeUsers to set initial values
 // initializeUsers();
 
+// Add this function to get transactions by user ID
+transactionCtrl.getTransactionsByUserId = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const transactions = await Transaction.find({ userId }); // Adjust query as necessary
+    res.json({ ok: true, data: transactions });
+  } catch (error) {
+    res.status(500).json({ ok: false, message: "Error fetching transactions" });
+  }
+};
+
 // Create Transaction
 transactionCtrl.createTransaction = async (req, res) => {
   try {
@@ -419,21 +430,6 @@ transactionCtrl.getAllTransactions = async (req, res) => {
   } catch (error) {
     console.error(`Error retrieving transactions: ${error.message}`);
     return response(res, 500, false, "", "Error retrieving transactions");
-  }
-};
-
-// Get transaction by ID
-transactionCtrl.getTransactionById = async (req, res) => {
-  try {
-    const transaction = await TransactionModel.findById(req.params.transactionId);
-
-    if (!transaction) {
-      return response(res, 404, false, "", "Transaction not found");
-    }
-
-    response(res, 200, true, { ...transaction._doc, password: null }, "Transaction found");
-  } catch (error) {
-    response(res, 500, false, null, error.message);
   }
 };
 
