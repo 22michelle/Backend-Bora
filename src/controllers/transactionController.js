@@ -422,24 +422,18 @@ transactionCtrl.getAllTransactions = async (req, res) => {
   }
 };
 
-// Get transaction by ID
+// Get Transaction by ID
 transactionCtrl.getTransactionById = async (req, res) => {
   try {
-    const transaction = await TransactionModel.findById(
-      req.params.transactionId
-    );
+    const { transactionId } = req.params;
+    const transaction = await TransactionModel.findById(transactionId)
+      .populate('senderId receiverId'); // Populate if needed to get user details
 
     if (!transaction) {
       return response(res, 404, false, "", "Transaction not found");
     }
 
-    response(
-      res,
-      200,
-      true,
-      { ...transaction._doc, password: null },
-      "Transaction found"
-    );
+    response(res, 200, true, transaction, "Transaction found");
   } catch (error) {
     response(res, 500, false, null, error.message);
   }
