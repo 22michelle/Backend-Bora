@@ -78,6 +78,9 @@ const UserSchema = new Schema(
       required: true,
       default: generateAccountNumber,
     },
+    transactions: [
+      { type: mongoose.Schema.Types.ObjectId, ref: "Transaction" },
+    ],
     transactionHistory: [
       {
         type: Schema.Types.ObjectId,

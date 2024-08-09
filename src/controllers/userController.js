@@ -92,7 +92,7 @@ userCtrl.updateUser = async (req, res) => {
 // Get all Users
 userCtrl.getAllUsers = async (req, res) => {
   try {
-    const users = await UserModel.find();
+    const users = await UserModel.find().populate("transactions");
     response(res, 200, true, users, "Users obtained successfully");
   } catch (error) {
     response(res, 500, false, null, error.message);
@@ -102,7 +102,9 @@ userCtrl.getAllUsers = async (req, res) => {
 // Get User by Id
 userCtrl.getUserById = async (req, res) => {
   try {
-    const user = await UserModel.findById(req.params.userId);
+    const user = await UserModel.findById(req.params.userId).populate(
+      "transactions"
+    );
 
     if (!user) {
       return response(res, 404, false, "", "User not found");
