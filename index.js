@@ -17,7 +17,7 @@ app.use(cookieParser());
 app.use(morgan("dev"));
 app.use(
   cors({
-    origin: "https://frontend-bora.vercel.app/",
+    origin: "*",
     credentials: true,
   })
 );
