@@ -92,7 +92,15 @@ userCtrl.updateUser = async (req, res) => {
 // Get all Users
 userCtrl.getAllUsers = async (req, res) => {
   try {
-    const users = await UserModel.find().populate("transactions");
+    const users = await UserModel.find()
+    .populate({
+      path: 'transactionHistory',
+      populate: [
+        { path: 'senderId', select: 'name' },
+        { path: 'receiverId', select: 'name' }
+      ]
+    })
+    .populate("transactions");
     response(res, 200, true, users, "Users obtained successfully");
   } catch (error) {
     response(res, 500, false, null, error.message);

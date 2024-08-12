@@ -58,7 +58,7 @@ const initializeUsers = async () => {
 };
 
 // Call initializeUsers to set initial values
-// initializeUsers();
+initializeUsers();
 
 // Create Transaction
 transactionCtrl.createTransaction = async (req, res) => {
@@ -412,9 +412,10 @@ transactionCtrl.calculateValue = async (user) => {
 // Get all transactions
 transactionCtrl.getAllTransactions = async (req, res) => {
   try {
-    const transactions = await TransactionModel.find().populate(
-      "senderId receiverId"
-    );
+    const transactions = await TransactionModel.find()
+      .populate('senderId', 'name')
+      .populate('receiverId', 'name');
+
     return response(res, 200, true, transactions, "List of all transactions");
   } catch (error) {
     console.error(`Error retrieving transactions: ${error.message}`);

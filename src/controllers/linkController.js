@@ -52,7 +52,6 @@ linkCtrl.updateLink = async (data) => {
   }
 };
 
-
 // Get All Links
 linkCtrl.getAllLinks = async (req, res) => {
   try {
