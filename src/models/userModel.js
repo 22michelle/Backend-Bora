@@ -35,7 +35,7 @@ const UserSchema = new Schema(
     balance: {
       type: Number,
       required: true,
-      default: 1000,
+      default: 0,
     },
     link_obligation: {
       type: Number,

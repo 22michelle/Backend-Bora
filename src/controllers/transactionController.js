@@ -20,8 +20,8 @@ const initializeUsers = async () => {
       {},
       {
         $set: {
-          balance: 1000,
-          value: 1000,
+          balance: 0,
+          value: 0,
           public_rate: 10,
           link_obligation: 0,
           link_income: 0,
@@ -38,8 +38,8 @@ const initializeUsers = async () => {
       { _id: "66a8ff7bc992db5aa2ddf33f" },
       {
         $set: {
-          balance: 1000,
-          value: 1000,
+          balance: 0,
+          value: 0,
           public_rate: 10,
           link_obligation: 0,
           link_income: 0,
@@ -59,6 +59,38 @@ const initializeUsers = async () => {
 
 // Call initializeUsers to set initial values
 initializeUsers();
+
+// Deposit Money
+transactionCtrl.depositMoney = async (req, res) => {
+  try {
+    const { accountNumber, amount } = req.body;
+
+    // Validate required fields
+    if (!accountNumber || !amount) {
+      return response(res, 400, false, "", "Account number and amount are required");
+    }
+
+    // Find the user by account number
+    const user = await UserModel.findOne({ accountNumber });
+
+    if (!user) {
+      return response(res, 404, false, "", "User not found");
+    }
+
+    // Update user's balance and value
+    user.balance += amount;
+    user.value = user.balance; // Set value to match the new balance
+
+    // Save the updated user
+    await user.save();
+
+    // Return success response
+    return response(res, 200, true, user, "Deposit successful");
+  } catch (error) {
+    console.error(`Error depositing money: ${error.message}`);
+    return response(res, 500, false, null, error.message);
+  }
+};
 
 // Create Transaction
 transactionCtrl.createTransaction = async (req, res) => {
