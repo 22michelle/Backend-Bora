@@ -58,7 +58,7 @@ const initializeUsers = async () => {
 };
 
 // Call initializeUsers to set initial values
-initializeUsers();
+// initializeUsers();
 
 // Deposit Money
 transactionCtrl.depositMoney = async (req, res) => {
@@ -91,6 +91,49 @@ transactionCtrl.depositMoney = async (req, res) => {
     return response(res, 500, false, null, error.message);
   }
 };
+
+// Withdraw Money
+transactionCtrl.withdrawMoney = async (req, res) => {
+  try {
+    const { accountNumber, amount } = req.body;
+
+    // Validate required fields
+    if (!accountNumber || !amount) {
+      return response(res, 400, false, "", "Account number and amount are required");
+    }
+
+    // Check if amount is a positive number
+    if (amount <= 0) {
+      return response(res, 400, false, "", "Amount must be greater than zero");
+    }
+
+    // Find the user by account number
+    const user = await UserModel.findOne({ accountNumber });
+
+    if (!user) {
+      return response(res, 404, false, "", "User not found");
+    }
+
+    // Check if user has sufficient balance
+    if (user.balance < amount) {
+      return response(res, 400, false, "", "Insufficient balance");
+    }
+
+    // Update user's balance and value
+    user.balance -= amount;
+    user.value = await transactionCtrl.calculateValue(user); // Set value to match the new balance
+
+    // Save the updated user
+    await user.save();
+
+    // Return success response
+    return response(res, 200, true, user, "Withdrawal successful");
+  } catch (error) {
+    console.error(`Error withdrawing money: ${error.message}`);
+    return response(res, 500, false, null, error.message);
+  }
+};
+
 
 // Create Transaction
 transactionCtrl.createTransaction = async (req, res) => {
