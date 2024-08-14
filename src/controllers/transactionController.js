@@ -79,7 +79,7 @@ transactionCtrl.depositMoney = async (req, res) => {
 
     // Update user's balance and value
     user.balance += amount;
-    user.value = user.balance; // Set value to match the new balance
+    user.value = await transactionCtrl.calculateValue(user); // Set value to match the new balance
 
     // Save the updated user
     await user.save();
