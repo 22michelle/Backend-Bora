@@ -50,7 +50,6 @@ const initializeUsers = async () => {
         },
       }
     );
-
     console.log("Users initialized successfully.");
   } catch (error) {
     console.error(`Error initializing users: ${error.message}`);
@@ -58,7 +57,7 @@ const initializeUsers = async () => {
 };
 
 // Call initializeUsers to set initial values
-// initializeUsers();
+initializeUsers();
 
 // Deposit Money
 transactionCtrl.depositMoney = async (req, res) => {
@@ -67,7 +66,19 @@ transactionCtrl.depositMoney = async (req, res) => {
 
     // Validate required fields
     if (!accountNumber || !amount) {
-      return response(res, 400, false, "", "Account number and amount are required");
+      return response(
+        res,
+        400,
+        false,
+        "",
+        "Account number and amount are required"
+      );
+    }
+
+    // Ensure amount is a number
+    const depositAmount = parseFloat(amount);
+    if (isNaN(depositAmount)) {
+      return response(res, 400, false, "", "Invalid deposit amount");
     }
 
     // Find the user by account number
@@ -78,7 +89,7 @@ transactionCtrl.depositMoney = async (req, res) => {
     }
 
     // Update user's balance and value
-    user.balance += amount;
+    user.balance = (user.balance || 0) + depositAmount;
     user.value = await transactionCtrl.calculateValue(user); // Set value to match the new balance
 
     // Save the updated user
@@ -92,6 +103,7 @@ transactionCtrl.depositMoney = async (req, res) => {
   }
 };
 
+
 // Withdraw Money
 transactionCtrl.withdrawMoney = async (req, res) => {
   try {
@@ -99,7 +111,13 @@ transactionCtrl.withdrawMoney = async (req, res) => {
 
     // Validate required fields
     if (!accountNumber || !amount) {
-      return response(res, 400, false, "", "Account number and amount are required");
+      return response(
+        res,
+        400,
+        false,
+        "",
+        "Account number and amount are required"
+      );
     }
 
     // Check if amount is a positive number
@@ -133,7 +151,6 @@ transactionCtrl.withdrawMoney = async (req, res) => {
     return response(res, 500, false, null, error.message);
   }
 };
-
 
 // Create Transaction
 transactionCtrl.createTransaction = async (req, res) => {
@@ -488,8 +505,8 @@ transactionCtrl.calculateValue = async (user) => {
 transactionCtrl.getAllTransactions = async (req, res) => {
   try {
     const transactions = await TransactionModel.find()
-      .populate('senderId', 'name')
-      .populate('receiverId', 'name');
+      .populate("senderId", "name")
+      .populate("receiverId", "name");
 
     return response(res, 200, true, transactions, "List of all transactions");
   } catch (error) {
@@ -502,16 +519,20 @@ transactionCtrl.getAllTransactions = async (req, res) => {
 transactionCtrl.getTransactionById = async (req, res) => {
   try {
     const { transactionId } = req.params;
-    const transaction = await TransactionModel.findById(transactionId)
-      .populate('senderId receiverId'); // Populate if needed to get user details
+    if (!mongoose.Types.ObjectId.isValid(transactionId)) {
+      return response(res, 400, false, "", "Invalid transaction ID format");
+    }
+    const transaction = await TransactionModel.findById(transactionId).populate(
+      "senderId receiverId"
+    );
 
     if (!transaction) {
       return response(res, 404, false, "", "Transaction not found");
     }
 
-    response(res, 200, true, transaction, "Transaction found");
+    return response(res, 200, true, transaction, "Transaction found");
   } catch (error) {
-    response(res, 500, false, null, error.message);
+    return response(res, 500, false, null, error.message);
   }
 };
 
