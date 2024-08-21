@@ -55,7 +55,7 @@ const UserSchema = new Schema(
     public_rate: {
       type: Number,
       required: true,
-      default: 0,
+      default: 10,
     },
     auxiliary: {
       type: Number,
