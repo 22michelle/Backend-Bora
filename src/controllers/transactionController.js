@@ -93,7 +93,7 @@ transactionCtrl.depositMoney = async (req, res) => {
     user.value = await transactionCtrl.calculateValue(user); // Set value to match the new balance
 
     // Save the updated user
-    await user.save();
+    await user.save(); 
 
     // Return success response
     return response(res, 200, true, user, "Deposit successful");
@@ -102,7 +102,6 @@ transactionCtrl.depositMoney = async (req, res) => {
     return response(res, 500, false, null, error.message);
   }
 };
-
 
 // Withdraw Money
 transactionCtrl.withdrawMoney = async (req, res) => {

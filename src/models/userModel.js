@@ -50,7 +50,7 @@ const UserSchema = new Schema(
     value: {
       type: Number,
       required: true,
-      default: 1000,
+      default: 0,
     },
     public_rate: {
       type: Number,
