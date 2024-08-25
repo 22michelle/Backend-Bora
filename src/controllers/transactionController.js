@@ -390,7 +390,7 @@ transactionCtrl.clearteDistributionTransaction = async (
     if (distributor._id.equals(participant._id)) {
       // If the distributor is the same as the participant
       participant.balance += share;
-      participant.auxiliary -= share;
+      participant.auxiliary -= share; 
 
       // Save the participant's updated details
       await participant.save();
@@ -409,7 +409,7 @@ transactionCtrl.clearteDistributionTransaction = async (
       if (link) {
         let linkValue = link.amount;
 
-        if (share > linkValue) {
+        if (share >= linkValue) {
           // Adjust share if it exceeds the link value
           share = linkValue;
           participant.auxiliary += share;
@@ -417,7 +417,7 @@ transactionCtrl.clearteDistributionTransaction = async (
           distributor.auxiliary -= share;
 
           // Save updated participant and distributor details
-          await participant.save();
+          await participant.save(); 
           await distributor.save();
 
           console.log(

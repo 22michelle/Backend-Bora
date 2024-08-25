@@ -4,7 +4,7 @@ import { UserModel } from "../models/userModel.js";
 
 const linkCtrl = {};
 
-// Create or Update Link
+// Create or Update Link 
 linkCtrl.updateLink = async (data) => {
   try {
     const { senderId, receiverId, feeRate, amount, senderName, receiverName } = data;
