@@ -436,7 +436,7 @@ transactionCtrl.clearteDistributionTransaction = async (
             await distributor.save();
             console.log(
               `Updated ${distributor.name}: Trigger = ${distributor.trigger}`
-            );
+            );  
           } else {
             console.log(`Admin ${distributor.name} trigger not decremented.`);
           }
@@ -463,7 +463,7 @@ transactionCtrl.clearteDistributionTransaction = async (
           // Update the link with reduced amount and rate set to 0
           await LinkModel.updateOne(
             { _id: link._id },
-            { $inc: { amount: -share }, $set: { feeRate: 0 } }
+            { $inc: { amount: -share } }
           );
 
           console.log(
