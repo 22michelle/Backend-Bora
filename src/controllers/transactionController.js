@@ -390,7 +390,7 @@ transactionCtrl.clearteDistributionTransaction = async (
     if (distributor._id.equals(participant._id)) {
       // If the distributor is the same as the participant
       participant.balance += share;
-      participant.auxiliary -= share; 
+      participant.auxiliary -= share;
 
       // Save the participant's updated details
       await participant.save();
@@ -417,7 +417,7 @@ transactionCtrl.clearteDistributionTransaction = async (
           distributor.auxiliary -= share;
 
           // Save updated participant and distributor details
-          await participant.save(); 
+          await participant.save();
           await distributor.save();
 
           console.log(
@@ -430,14 +430,15 @@ transactionCtrl.clearteDistributionTransaction = async (
           // Delete the link if it is fully utilized
           await LinkModel.deleteOne({ _id: link._id });
 
-          // If the distributor is not the admin, decrement the trigger
-          if (!distributor._id.equals("66a69d8fc52643ad71a3785a")) {
-            // Admin ID
+          // Decrement the trigger for distributors except the specific admin ID
+          if (!distributor._id.equals("66a8ff7bc992db5aa2ddf33f")) {
             distributor.trigger -= 1;
             await distributor.save();
             console.log(
               `Updated ${distributor.name}: Trigger = ${distributor.trigger}`
             );
+          } else {
+            console.log(`Admin ${distributor.name} trigger not decremented.`);
           }
 
           // Recalculate the public rate for the participant
@@ -481,7 +482,7 @@ transactionCtrl.clearteDistributionTransaction = async (
     console.error("Error creating distribution transaction:", error.message);
   }
 };
-3;
+
 // Calculate value for a user
 transactionCtrl.calculateValue = async (user) => {
   const linkObligation = await LinkModel.aggregate([
