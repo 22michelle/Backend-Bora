@@ -60,7 +60,7 @@ const initializeUsers = async () => {
 initializeUsers();
 
 // Deposit Money
-transactionCtrl.depositMoney = async (req, res) => {
+transactionCtrl.depositMoney = async (req, res) => { 
   try {
     const { accountNumber, amount } = req.body;
 
@@ -339,7 +339,7 @@ transactionCtrl.Distribute = async (user) => {
     const distributionAmount = user.auxiliary;
 
     // Identify all links where the user is the receiver
-    const links = await LinkModel.find({ receiverId: user._id });
+    const links = await LinkModel.find({ receiverId: user._id }); 
 
     let totalPR = 0;
     const participants = [];
