@@ -19,6 +19,7 @@ app.use(morgan("dev"));
 // Define allowed origins
 const allowedOrigins = [
   "http://localhost:5173", // Local development
+  "http://localhost:3000", // Local development
   "https://frontend-bora.vercel.app", // Production
 ];
 
