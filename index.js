@@ -20,7 +20,8 @@ app.use(morgan("dev"));
 const allowedOrigins = [
   "http://localhost:5173", // Local development
   "http://localhost:3000", // Local development
-  "https://frontend-bora.vercel.app", // Production
+  "https://frontend-bora.vercel.app", // Production 0.1
+  "https://bora02.netlify.app", // Production 0.2
 ];
 
 // Configure CORS
