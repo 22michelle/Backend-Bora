@@ -57,10 +57,10 @@ const initializeUsers = async () => {
 };
 
 // Call initializeUsers to set initial values
-// initializeUsers();
+initializeUsers();
 
 // Deposit Money
-transactionCtrl.depositMoney = async (req, res) => { 
+transactionCtrl.depositMoney = async (req, res) => {
   try {
     const { accountNumber, amount } = req.body;
 
@@ -93,7 +93,7 @@ transactionCtrl.depositMoney = async (req, res) => {
     user.value = await transactionCtrl.calculateValue(user); // Set value to match the new balance
 
     // Save the updated user
-    await user.save(); 
+    await user.save();
 
     // Return success response
     return response(res, 200, true, user, "Deposit successful");
@@ -336,10 +336,10 @@ transactionCtrl.Distribute = async (user) => {
   try {
     console.log("Distributing for user:", user._id);
 
-    const distributionAmount = user.auxiliary;
+    let distributionAmount = user.auxiliary;
 
     // Identify all links where the user is the receiver
-    const links = await LinkModel.find({ receiverId: user._id }); 
+    const links = await LinkModel.find({ receiverId: user._id });
 
     let totalPR = 0;
     const participants = [];
@@ -360,7 +360,12 @@ transactionCtrl.Distribute = async (user) => {
 
     // Calculate and distribute shares for each participant
     for (const participant of participants) {
-      const share = (distributionAmount * participant.public_rate) / totalPR;
+      // Log the values used for share calculation
+      console.log(
+        `Calculating for ${participant.name}: distributionAmount = ${distributionAmount}, public_rate = ${participant.public_rate}, totalPR = ${totalPR}`
+      );
+
+      const share = Number(((distributionAmount * participant.public_rate) / totalPR).toFixed(2));
 
       // Log the share distribution and create the transaction
       console.log(`${user.name}, to ${participant.name}, ${share}`);
@@ -420,6 +425,9 @@ transactionCtrl.clearteDistributionTransaction = async (
           await participant.save();
           await distributor.save();
 
+          participant = await UserModel.findById(participant._id);
+          distributor = await UserModel.findById(distributor._id);
+
           console.log(
             `Updated ${participant.name}: Auxiliary = ${participant.auxiliary}, Transaction Count = ${participant.trxCount}`
           );
@@ -436,7 +444,7 @@ transactionCtrl.clearteDistributionTransaction = async (
             await distributor.save();
             console.log(
               `Updated ${distributor.name}: Trigger = ${distributor.trigger}`
-            );  
+            );
           } else {
             console.log(`Admin ${distributor.name} trigger not decremented.`);
           }
