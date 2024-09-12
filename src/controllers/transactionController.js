@@ -60,7 +60,7 @@ const initializeUsers = async () => {
 initializeUsers();
 
 // Deposit Money
-transactionCtrl.depositMoney = async (req, res) => { 
+transactionCtrl.depositMoney = async (req, res) => {
   try {
     const { accountNumber, amount } = req.body;
 
@@ -93,7 +93,7 @@ transactionCtrl.depositMoney = async (req, res) => {
     user.value = await transactionCtrl.calculateValue(user); // Set value to match the new balance
 
     // Save the updated user
-    await user.save(); 
+    await user.save();
 
     // Return success response
     return response(res, 200, true, user, "Deposit successful");
@@ -339,7 +339,7 @@ transactionCtrl.Distribute = async (user) => {
     const distributionAmount = user.auxiliary;
 
     // Identify all links where the user is the receiver
-    const links = await LinkModel.find({ receiverId: user._id }); 
+    const links = await LinkModel.find({ receiverId: user._id });
 
     let totalPR = 0;
     const participants = [];
@@ -380,20 +380,20 @@ transactionCtrl.Distribute = async (user) => {
 };
 
 // Create a distribution transaction
-transactionCtrl.clearteDistributionTransaction = async (
-  distributor,
-  participant,
-  share
-) => {
+transactionCtrl.clearteDistributionTransaction = async (distributor, participant, share) => {
   try {
     // Check if the distributor and participant are the same
     if (distributor._id.equals(participant._id)) {
       // If the distributor is the same as the participant
-      participant.balance += share;
-      participant.auxiliary -= share;
+      await UserModel.updateOne(
+        { _id: participant._id },
+        {
+          $inc: { balance: +share, auxiliary: -share },
+        }
+      );
 
-      // Save the participant's updated details
-      await participant.save();
+      // Fetch the updated participant to log the details
+      participant = await UserModel.findById(participant._id);
 
       console.log(
         `Updated ${participant.name}: Balance = ${participant.balance}, Auxiliary = ${participant.auxiliary}`
@@ -405,20 +405,30 @@ transactionCtrl.clearteDistributionTransaction = async (
         receiverId: distributor._id,
       });
 
-      // Check if the link exists and get its value
       if (link) {
         let linkValue = link.amount;
 
         if (share >= linkValue) {
           // Adjust share if it exceeds the link value
           share = linkValue;
-          participant.auxiliary += share;
-          participant.trxCount += 1;
-          distributor.auxiliary -= share;
 
-          // Save updated participant and distributor details
-          await participant.save();
-          await distributor.save();
+          await UserModel.updateOne(
+            { _id: participant._id },
+            {
+              $inc: { auxiliary: +share, trxCount: +1 },
+            }
+          );
+
+          await UserModel.updateOne(
+            { _id: distributor._id },
+            {
+              $inc: { auxiliary: -share },
+            }
+          );
+
+          // Fetch the updated participant and distributor to log the details
+          participant = await UserModel.findById(participant._id);
+          distributor = await UserModel.findById(distributor._id);
 
           console.log(
             `Updated ${participant.name}: Auxiliary = ${participant.auxiliary}, Transaction Count = ${participant.trxCount}`
@@ -432,11 +442,11 @@ transactionCtrl.clearteDistributionTransaction = async (
 
           // Decrement the trigger for distributors except the specific admin ID
           if (!distributor._id.equals("66e23b0b9d29581c2c6028dd")) {
-            distributor.trigger -= 1;
-            await distributor.save();
-            console.log(
-              `Updated ${distributor.name}: Trigger = ${distributor.trigger}`
-            );  
+            await UserModel.updateOne(
+              { _id: distributor._id },
+              { $inc: { trigger: -1 } }
+            );
+            console.log(`Updated ${distributor.name}: Trigger = ${distributor.trigger - 1}`);
           } else {
             console.log(`Admin ${distributor.name} trigger not decremented.`);
           }
@@ -445,13 +455,22 @@ transactionCtrl.clearteDistributionTransaction = async (
           await transactionCtrl.calculatePR(participant);
         } else {
           // Update link if share is less than the link value
-          participant.auxiliary += share;
-          participant.trxCount += 1;
-          distributor.auxiliary -= share;
+          await UserModel.updateOne(
+            { _id: participant._id },
+            {
+              $inc: { auxiliary: +share, trxCount: +1 },
+            }
+          );
+          await UserModel.updateOne(
+            { _id: distributor._id },
+            {
+              $inc: { auxiliary: -share },
+            }
+          );
 
-          // Save updated participant and distributor details
-          await participant.save();
-          await distributor.save();
+          // Fetch the updated participant and distributor to log the details
+          participant = await UserModel.findById(participant._id);
+          distributor = await UserModel.findById(distributor._id);
 
           console.log(
             `Updated ${participant.name}: Auxiliary = ${participant.auxiliary}, Transaction Count = ${participant.trxCount}`
@@ -460,16 +479,14 @@ transactionCtrl.clearteDistributionTransaction = async (
             `Updated ${distributor.name}: Auxiliary = ${distributor.auxiliary}`
           );
 
-          // Update the link with reduced amount and rate set to 0
+          // Update the link with reduced amount
           await LinkModel.updateOne(
             { _id: link._id },
             { $inc: { amount: -share } }
           );
 
           console.log(
-            `Updated link between ${participant.name} and ${
-              distributor.name
-            }: Remaining Amount = ${link.amount - share}`
+            `Updated link between ${participant.name} and ${distributor.name}: Remaining Amount = ${link.amount - share}`
           );
         }
       } else {
