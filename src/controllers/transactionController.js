@@ -35,7 +35,7 @@ const initializeUsers = async () => {
 
     // Update admin user separately
     await UserModel.updateOne(
-      { _id: "66a8ff7bc992db5aa2ddf33f" },
+      { _id: "66e23b0b9d29581c2c6028dd" },
       {
         $set: {
           balance: 0,
@@ -57,7 +57,7 @@ const initializeUsers = async () => {
 };
 
 // Call initializeUsers to set initial values
-initializeUsers();
+// initializeUsers();
 
 // Deposit Money
 transactionCtrl.depositMoney = async (req, res) => {
@@ -210,7 +210,7 @@ transactionCtrl.createTransaction = async (req, res) => {
       });
 
       // Update receiver-admin link
-      const adminId = "66a8ff7bc992db5aa2ddf33f";
+      const adminId = "66e23b0b9d29581c2c6028dd";
       const admin = await UserModel.findById(adminId);
       if (admin) {
         await linkCtrl.updateLink({
@@ -323,7 +323,7 @@ transactionCtrl.clearPendingDistributions = async () => {
       usersWithPendingDistributions
     );
 
-    for (const user of usersWithPendingDistributions) {
+    for (const user of usersWithPendingDistributions) { 
       console.log("Distributing for user:", user._id);
     
       let distributionAmount = user.auxiliary;
@@ -365,7 +365,7 @@ transactionCtrl.clearPendingDistributions = async () => {
           share
         );
       }
-      
+
       // Reset transaction count (trxCount) to zero after distribution
       user.trxCount = 0;
       await user.save();
@@ -374,7 +374,6 @@ transactionCtrl.clearPendingDistributions = async () => {
     console.error(`Error clearing pending distributions: ${error.message}`);
   }
 };
-
 
 // Create a distribution transaction
 transactionCtrl.clearteDistributionTransaction = async (
@@ -431,7 +430,7 @@ transactionCtrl.clearteDistributionTransaction = async (
           await LinkModel.deleteOne({ _id: link._id });
 
           // Decrement the trigger for distributors except the specific admin ID
-          if (!distributor._id.equals("66a8ff7bc992db5aa2ddf33f")) {
+          if (!distributor._id.equals("66e23b0b9d29581c2c6028dd")) {
             distributor.trigger -= 1;
             await distributor.save();
             console.log(
