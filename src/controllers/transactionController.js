@@ -57,7 +57,7 @@ const initializeUsers = async () => {
 };
 
 // Call initializeUsers to set initial values
-// initializeUsers();
+initializeUsers();
 
 // Deposit Money
 transactionCtrl.depositMoney = async (req, res) => {
@@ -306,12 +306,10 @@ transactionCtrl.calculatePR = async (user) => {
 };
 
 // Clear pending distributions
+// Distribute auxiliary among users
 transactionCtrl.clearPendingDistributions = async () => {
   try {
     const users = await UserModel.find({});
-
-    // Log the users obtained from the query
-    console.log("All users:", users);
 
     const usersWithPendingDistributions = users.filter(
       (user) => user.trxCount >= user.trigger + 1
@@ -323,17 +321,17 @@ transactionCtrl.clearPendingDistributions = async () => {
       usersWithPendingDistributions
     );
 
-    for (const user of usersWithPendingDistributions) { 
+    for (const user of usersWithPendingDistributions) {
       console.log("Distributing for user:", user._id);
-    
+
       let distributionAmount = user.auxiliary;
-    
+
       // Identify all links where the user is the receiver
       const links = await LinkModel.find({ receiverId: user._id });
-    
+
       let totalPR = 0;
       const participants = [];
-    
+
       // Sum up PR values for each participant
       for (const link of links) {
         const participant = await UserModel.findById(link.senderId);
@@ -341,24 +339,26 @@ transactionCtrl.clearPendingDistributions = async () => {
         console.log(participant.public_rate);
         participants.push(participant);
       }
-    
+
       // Check if the user should also be considered as a participant
       if (user.balance < user.value) {
         participants.push(user);
         totalPR += user.public_rate;
       }
-    
+
       // Calculate and distribute shares for each participant
       for (const participant of participants) {
+        // Calculate the share to be distributed
+        const share = parseFloat(
+          ((distributionAmount * participant.public_rate) / totalPR).toFixed(2)
+        );
+
         // Log the values used for share calculation
         console.log(
           `Calculating for ${participant.name}: distributionAmount = ${distributionAmount}, public_rate = ${participant.public_rate}, totalPR = ${totalPR}`
         );
-    
-        const share = Number((distributionAmount * participant.public_rate) / totalPR);
-    
-        // Log the share distribution and create the transaction
         console.log(`${user.name}, to ${participant.name}, ${share}`);
+
         await transactionCtrl.clearteDistributionTransaction(
           user,
           participant,
@@ -372,6 +372,134 @@ transactionCtrl.clearPendingDistributions = async () => {
     }
   } catch (error) {
     console.error(`Error clearing pending distributions: ${error.message}`);
+  }
+};
+
+// Adjust the distribution transaction
+transactionCtrl.clearteDistributionTransaction = async (
+  distributor,
+  participant,
+  share
+) => {
+  try {
+    // Check if the distributor and participant are the same
+    if (distributor._id.equals(participant._id)) {
+
+      // If the distributor is the same as the participant
+      await UserModel.updateOne(
+        { _id: participant._id },
+        {
+          $inc: { auxiliary: +share }, 
+        }
+      );
+
+      // Fetch the updated participant to log the details
+      participant = await UserModel.findById(participant._id);
+
+      console.log(
+        `Updated ${participant.name}: Balance = ${participant.balance}, Auxiliary = ${participant.auxiliary}`
+      );
+    } else {
+      // Get the link value (assuming a link exists between participant and distributor)
+      const link = await LinkModel.findOne({
+        senderId: participant._id,
+        receiverId: distributor._id,
+      });
+
+      // Check if the link exists and get its value
+      if (link) {
+        let linkValue = link.amount;
+
+        if (share >= linkValue) {
+          // Adjust share if it exceeds the link value
+          share = linkValue;
+
+          await UserModel.updateOne(
+            { _id: participant._id },
+            {
+              $inc: { auxiliary: share, trxCount: 1 }, // Increment auxiliary and trxCount
+            }
+          );
+          await UserModel.updateOne(
+            { _id: distributor._id },
+            {
+              $inc: { auxiliary: -share }, // Decrement distributor's auxiliary
+            }
+          );
+
+          // Fetch the updated participant and distributor
+          participant = await UserModel.findById(participant._id);
+          distributor = await UserModel.findById(distributor._id);
+
+          console.log(
+            `Updated ${participant.name}: Auxiliary = ${participant.auxiliary}, Transaction Count = ${participant.trxCount}`
+          );
+          console.log(
+            `Updated ${distributor.name}: Auxiliary = ${distributor.auxiliary}`
+          );
+
+          // Delete the link if it is fully utilized
+          await LinkModel.deleteOne({ _id: link._id });
+
+          // Decrement the trigger for distributors except the specific admin ID
+          if (!distributor._id.equals("66e23b0b9d29581c2c6028dd")) {
+            distributor.trigger -= 1;
+            await distributor.save();
+            console.log(
+              `Updated ${distributor.name}: Trigger = ${distributor.trigger}`
+            );
+          } else {
+            console.log(`Admin ${distributor.name} trigger not decremented.`);
+          }
+
+          // Recalculate the public rate for the participant
+          await transactionCtrl.calculatePR(participant);
+        } else {
+          // Update link if share is less than the link value
+          await UserModel.updateOne(
+            { _id: participant._id },
+            {
+              $inc: { auxiliary: share, trxCount: 1 }, // Increment auxiliary and trxCount
+            }
+          );
+          await UserModel.updateOne(
+            { _id: distributor._id },
+            {
+              $inc: { auxiliary: -share }, // Decrement distributor's auxiliary
+            }
+          );
+
+          // Fetch the updated participant and distributor
+          participant = await UserModel.findById(participant._id);
+          distributor = await UserModel.findById(distributor._id);
+
+          console.log(
+            `Updated ${participant.name}: Auxiliary = ${participant.auxiliary}, Transaction Count = ${participant.trxCount}`
+          );
+          console.log(
+            `Updated ${distributor.name}: Auxiliary = ${distributor.auxiliary}`
+          );
+
+          // Update the link with reduced amount
+          await LinkModel.updateOne(
+            { _id: link._id },
+            { $inc: { amount: -share } }
+          );
+
+          console.log(
+            `Updated link between ${participant.name} and ${
+              distributor.name
+            }: Remaining Amount = ${link.amount - share}`
+          );
+        }
+      } else {
+        console.log(
+          `No link found between ${participant.name} and ${distributor.name}`
+        );
+      }
+    }
+  } catch (error) {
+    console.error("Error creating distribution transaction:", error.message);
   }
 };
 
@@ -408,16 +536,15 @@ transactionCtrl.clearteDistributionTransaction = async (
         if (share >= linkValue) {
           // Adjust share if it exceeds the link value
           share = linkValue;
-          participant.auxiliary += share; // Participant receives the full share
+
+          // Update auxiliary values
+          participant.auxiliary += linkValue;
           participant.trxCount += 1;
-          distributor.auxiliary -= share; // Distributor loses the share
+          distributor.auxiliary -= linkValue;
 
           // Save updated participant and distributor details
           await participant.save();
           await distributor.save();
-
-          participant = await UserModel.findById(participant._id);
-          distributor = await UserModel.findById(distributor._id);
 
           console.log(
             `Updated ${participant.name}: Auxiliary = ${participant.auxiliary}, Transaction Count = ${participant.trxCount}`
@@ -429,7 +556,7 @@ transactionCtrl.clearteDistributionTransaction = async (
           // Delete the link if it is fully utilized
           await LinkModel.deleteOne({ _id: link._id });
 
-          // Decrement the trigger for distributors except the specific admin ID
+          // Decrement the trigger for the distributor, except the admin
           if (!distributor._id.equals("66e23b0b9d29581c2c6028dd")) {
             distributor.trigger -= 1;
             await distributor.save();
@@ -443,8 +570,8 @@ transactionCtrl.clearteDistributionTransaction = async (
           // Recalculate the public rate for the participant
           await transactionCtrl.calculatePR(participant);
         } else {
-          // Update link if share is less than the link value
-          participant.auxiliary += share; // Participant gets the share
+          // If the share is less than the link value, reduce the link amount
+          participant.auxiliary += share; // Participant receives the share
           participant.trxCount += 1;
           distributor.auxiliary -= share; // Distributor's auxiliary decreases
 
@@ -459,7 +586,7 @@ transactionCtrl.clearteDistributionTransaction = async (
             `Updated ${distributor.name}: Auxiliary = ${distributor.auxiliary}`
           );
 
-          // Update the link with reduced amount
+          // Update the link with the reduced amount
           await LinkModel.updateOne(
             { _id: link._id },
             { $inc: { amount: -share } }
