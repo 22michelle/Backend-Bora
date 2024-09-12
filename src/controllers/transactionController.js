@@ -380,20 +380,20 @@ transactionCtrl.Distribute = async (user) => {
 };
 
 // Create a distribution transaction
-transactionCtrl.clearteDistributionTransaction = async (distributor, participant, share) => {
+transactionCtrl.clearteDistributionTransaction = async (
+  distributor,
+  participant,
+  share
+) => {
   try {
     // Check if the distributor and participant are the same
     if (distributor._id.equals(participant._id)) {
       // If the distributor is the same as the participant
-      await UserModel.updateOne(
-        { _id: participant._id },
-        {
-          $inc: { balance: +share, auxiliary: -share },
-        }
-      );
+      participant.balance += share;
+      participant.auxiliary -= share;
 
-      // Fetch the updated participant to log the details
-      participant = await UserModel.findById(participant._id);
+      // Save the participant's updated details
+      await participant.save();
 
       console.log(
         `Updated ${participant.name}: Balance = ${participant.balance}, Auxiliary = ${participant.auxiliary}`
@@ -405,30 +405,20 @@ transactionCtrl.clearteDistributionTransaction = async (distributor, participant
         receiverId: distributor._id,
       });
 
+      // Check if the link exists and get its value
       if (link) {
         let linkValue = link.amount;
 
         if (share >= linkValue) {
           // Adjust share if it exceeds the link value
           share = linkValue;
+          participant.auxiliary += share;
+          participant.trxCount += 1;
+          distributor.auxiliary -= share;
 
-          await UserModel.updateOne(
-            { _id: participant._id },
-            {
-              $inc: { auxiliary: +share, trxCount: +1 },
-            }
-          );
-
-          await UserModel.updateOne(
-            { _id: distributor._id },
-            {
-              $inc: { auxiliary: -share },
-            }
-          );
-
-          // Fetch the updated participant and distributor to log the details
-          participant = await UserModel.findById(participant._id);
-          distributor = await UserModel.findById(distributor._id);
+          // Save updated participant and distributor details
+          await participant.save();
+          await distributor.save();
 
           console.log(
             `Updated ${participant.name}: Auxiliary = ${participant.auxiliary}, Transaction Count = ${participant.trxCount}`
@@ -442,11 +432,11 @@ transactionCtrl.clearteDistributionTransaction = async (distributor, participant
 
           // Decrement the trigger for distributors except the specific admin ID
           if (!distributor._id.equals("66e23b0b9d29581c2c6028dd")) {
-            await UserModel.updateOne(
-              { _id: distributor._id },
-              { $inc: { trigger: -1 } }
-            );
-            console.log(`Updated ${distributor.name}: Trigger = ${distributor.trigger - 1}`);
+            distributor.trigger -= 1;
+            await distributor.save();
+            console.log(
+              `Updated ${distributor.name}: Trigger = ${distributor.trigger}`
+            );  
           } else {
             console.log(`Admin ${distributor.name} trigger not decremented.`);
           }
@@ -455,22 +445,13 @@ transactionCtrl.clearteDistributionTransaction = async (distributor, participant
           await transactionCtrl.calculatePR(participant);
         } else {
           // Update link if share is less than the link value
-          await UserModel.updateOne(
-            { _id: participant._id },
-            {
-              $inc: { auxiliary: +share, trxCount: +1 },
-            }
-          );
-          await UserModel.updateOne(
-            { _id: distributor._id },
-            {
-              $inc: { auxiliary: -share },
-            }
-          );
+          participant.auxiliary += share;
+          participant.trxCount += 1;
+          distributor.auxiliary -= share;
 
-          // Fetch the updated participant and distributor to log the details
-          participant = await UserModel.findById(participant._id);
-          distributor = await UserModel.findById(distributor._id);
+          // Save updated participant and distributor details
+          await participant.save();
+          await distributor.save();
 
           console.log(
             `Updated ${participant.name}: Auxiliary = ${participant.auxiliary}, Transaction Count = ${participant.trxCount}`
@@ -479,14 +460,16 @@ transactionCtrl.clearteDistributionTransaction = async (distributor, participant
             `Updated ${distributor.name}: Auxiliary = ${distributor.auxiliary}`
           );
 
-          // Update the link with reduced amount
+          // Update the link with reduced amount and rate set to 0
           await LinkModel.updateOne(
             { _id: link._id },
             { $inc: { amount: -share } }
           );
 
           console.log(
-            `Updated link between ${participant.name} and ${distributor.name}: Remaining Amount = ${link.amount - share}`
+            `Updated link between ${participant.name} and ${
+              distributor.name
+            }: Remaining Amount = ${link.amount - share}`
           );
         }
       } else {
