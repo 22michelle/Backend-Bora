@@ -324,60 +324,57 @@ transactionCtrl.clearPendingDistributions = async () => {
     );
 
     for (const user of usersWithPendingDistributions) {
-      try {
-        console.log("Distributing for user:", user._id);
+      console.log("Distributing for user:", user._id);
     
-        let distributionAmount = user.auxiliary;
+      let distributionAmount = user.auxiliary;
     
-        // Identify all links where the user is the receiver
-        const links = await LinkModel.find({ receiverId: user._id });
+      // Identify all links where the user is the receiver
+      const links = await LinkModel.find({ receiverId: user._id });
     
-        let totalPR = 0;
-        const participants = [];
+      let totalPR = 0;
+      const participants = [];
     
-        // Sum up PR values for each participant
-        for (const link of links) {
-          const participant = await UserModel.findById(link.senderId);
-          totalPR += participant.public_rate;
-          console.log(participant.public_rate);
-          participants.push(participant);
-        }
-    
-        // Check if the user should also be considered as a participant
-        if (user.balance < user.value) {
-          participants.push(user);
-          totalPR += user.public_rate;
-        }
-    
-        // Calculate and distribute shares for each participant
-        for (const participant of participants) {
-          // Log the values used for share calculation
-          console.log(
-            `Calculating for ${participant.name}: distributionAmount = ${distributionAmount}, public_rate = ${participant.public_rate}, totalPR = ${totalPR}`
-          );
-    
-          const share = Number((distributionAmount * participant.public_rate) / totalPR);
-    
-          // Log the share distribution and create the transaction
-          console.log(`${user.name}, to ${participant.name}, ${share}`);
-          await transactionCtrl.clearteDistributionTransaction(
-            user,
-            participant,
-            share
-          );
-        }
-    
-        // Reset transaction count (trxCount) to zero after distribution
-        user.trxCount = 0;
-        await user.save();
-      } catch (error) {
-        console.error(`Error distributing for user: ${user._id}`, error.message);
+      // Sum up PR values for each participant
+      for (const link of links) {
+        const participant = await UserModel.findById(link.senderId);
+        totalPR += participant.public_rate;
+        console.log(participant.public_rate);
+        participants.push(participant);
       }
+    
+      // Check if the user should also be considered as a participant
+      if (user.balance < user.value) {
+        participants.push(user);
+        totalPR += user.public_rate;
+      }
+    
+      // Calculate and distribute shares for each participant
+      for (const participant of participants) {
+        // Log the values used for share calculation
+        console.log(
+          `Calculating for ${participant.name}: distributionAmount = ${distributionAmount}, public_rate = ${participant.public_rate}, totalPR = ${totalPR}`
+        );
+    
+        const share = Number((distributionAmount * participant.public_rate) / totalPR);
+    
+        // Log the share distribution and create the transaction
+        console.log(`${user.name}, to ${participant.name}, ${share}`);
+        await transactionCtrl.clearteDistributionTransaction(
+          user,
+          participant,
+          share
+        );
+      }
+      
+      // Reset transaction count (trxCount) to zero after distribution
+      user.trxCount = 0;
+      await user.save();
     }
   } catch (error) {
     console.error(`Error clearing pending distributions: ${error.message}`);
   }
 };
+
 
 // Create a distribution transaction
 transactionCtrl.clearteDistributionTransaction = async (
