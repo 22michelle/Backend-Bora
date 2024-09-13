@@ -431,7 +431,6 @@ transactionCtrl.clearteDistributionTransaction = async (
  
           // Delete the link if it is fully utilized  
           await LinkModel.deleteOne({ _id: link._id });
-
           // Decrement the trigger for distributors except the specific admin ID
           // if (!distributor._id.equals("66e23b0b9d29581c2c6028dd")) {
           //   distributor.trigger -= 1;
