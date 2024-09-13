@@ -428,26 +428,26 @@ transactionCtrl.clearteDistributionTransaction = async (
           console.log(
             `Updated ${distributor.name}: Auxiliary = ${distributor.auxiliary}`
           );
-
+ 
           // Delete the link if it is fully utilized
           await LinkModel.deleteOne({ _id: link._id });
 
           // Decrement the trigger for distributors except the specific admin ID
-          if (!distributor._id.equals("66e23b0b9d29581c2c6028dd")) {
-            distributor.trigger -= 1;
-            await distributor.save();
-            console.log(
-              `Updated ${distributor.name}: Trigger = ${distributor.trigger}`
-            );  
-          } else {
-            console.log(`Admin ${distributor.name} trigger not decremented.`);
-          }
+          // if (!distributor._id.equals("66e23b0b9d29581c2c6028dd")) {
+          //   distributor.trigger -= 1;
+          //   await distributor.save();
+          //   console.log(
+          //     `Updated ${distributor.name}: Trigger = ${distributor.trigger}`
+          //   );  
+          // } else {
+          //   console.log(`Admin ${distributor.name} trigger not decremented.`);
+          // }
 
           // Recalculate the public rate for the participant
           await transactionCtrl.calculatePR(participant);
         } else {
           // Update link if share is less than the link value
-          participant.auxiliary += share;
+          participant.balance += share;
           // participant.trxCount += 1;
           distributor.auxiliary -= share;
 
