@@ -429,7 +429,7 @@ transactionCtrl.clearteDistributionTransaction = async (
             `Updated ${distributor.name}: Auxiliary = ${distributor.auxiliary}`
           );
  
-          // Delete the link if it is fully utilized
+          // Delete the link if it is fully utilized  
           await LinkModel.deleteOne({ _id: link._id });
 
           // Decrement the trigger for distributors except the specific admin ID
