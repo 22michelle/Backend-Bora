@@ -199,30 +199,32 @@ transactionCtrl.createTransaction = async (req, res) => {
       sender.balance -= amount + fee;
       receiver.balance += amount;
 
-      // Update sender-receiver link
-      await linkCtrl.updateLink({
-        senderName: sender.name,
-        receiverName: receiver.name,
-        senderId: sender._id,
-        receiverId: receiver._id,
-        feeRate: feeRate,
-        amount: amount,
-      });
-
-      // Update receiver-admin link
+      // Fetch the admin user
       const adminId = "66e23b0b9d29581c2c6028dd";
       const admin = await UserModel.findById(adminId);
+
       if (admin) {
+        // Update sender-admin link
         await linkCtrl.updateLink({
-          senderName: receiver.name,
+          senderName: sender.name,
           receiverName: admin.name,
-          senderId: receiver._id,
+          senderId: sender._id,
           receiverId: admin._id,
-          feeRate: receiver.public_rate,
-          amount: fee,
+          feeRate: sender.public_rate, // Use sender's public rate
+          amount: amount,
         });
 
-        // Update admin account
+        // Update admin-receiver link (change from receiver-admin to admin-receiver)
+        await linkCtrl.updateLink({
+          senderName: admin.name,
+          receiverName: receiver.name,
+          senderId: admin._id,
+          receiverId: receiver._id,
+          feeRate: receiver.public_rate, // Use receiver's public rate
+          amount: amount - fee, // Adjust the amount: amount - fee
+        });
+
+        // Update admin account for fee
         admin.auxiliary += fee;
         admin.trxCount += 1;
         admin.value = await transactionCtrl.calculateValue(admin);
@@ -412,8 +414,8 @@ transactionCtrl.clearteDistributionTransaction = async (
         if (share >= linkValue) {
           // Adjust share if it exceeds the link value
           share = linkValue;
-          participant.auxiliary += share;
-          participant.trxCount += 1;
+          participant.balance += share;
+          // participant.trxCount += 1;
           distributor.auxiliary -= share;
 
           // Save updated participant and distributor details
@@ -446,7 +448,7 @@ transactionCtrl.clearteDistributionTransaction = async (
         } else {
           // Update link if share is less than the link value
           participant.auxiliary += share;
-          participant.trxCount += 1;
+          // participant.trxCount += 1;
           distributor.auxiliary -= share;
 
           // Save updated participant and distributor details
