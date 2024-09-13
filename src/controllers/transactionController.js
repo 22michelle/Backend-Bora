@@ -414,7 +414,7 @@ transactionCtrl.clearteDistributionTransaction = async (
         if (share >= linkValue) {
           // Adjust share if it exceeds the link value
           share = linkValue;
-          participant.balance += share;
+          participant.balance += share;   
           // participant.trxCount += 1;
           distributor.auxiliary -= share;
 
