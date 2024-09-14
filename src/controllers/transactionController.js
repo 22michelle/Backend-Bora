@@ -205,12 +205,12 @@ transactionCtrl.createTransaction = async (req, res) => {
 
       if (admin) {
         // Update sender-admin link
-        await linkCtrl.updateLink({
+        await linkCtrl.updateLink({ 
           senderName: sender.name,
           receiverName: admin.name,
           senderId: sender._id,
           receiverId: admin._id,
-          feeRate: sender.public_rate, // Use sender's public rate
+          feeRate: feeRate,
           amount: amount,
         });
 
@@ -220,8 +220,8 @@ transactionCtrl.createTransaction = async (req, res) => {
           receiverName: receiver.name,
           senderId: admin._id,
           receiverId: receiver._id,
-          feeRate: receiver.public_rate, // Use receiver's public rate
-          amount: amount - fee, // Adjust the amount: amount - fee
+          feeRate: feeRate,
+          amount: amount - fee,
         });
 
         // Update admin account for fee
@@ -428,7 +428,7 @@ transactionCtrl.clearteDistributionTransaction = async (
           console.log(
             `Updated ${distributor.name}: Auxiliary = ${distributor.auxiliary}`
           );
-
+ 
           // Delete the link if it is fully utilized
           await LinkModel.deleteOne({ _id: link._id });
 
