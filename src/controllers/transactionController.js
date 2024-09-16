@@ -57,7 +57,7 @@ const initializeUsers = async () => {
 };
 
 // Call initializeUsers to set initial values
-// initializeUsers();
+initializeUsers();
 
 // Deposit Money
 transactionCtrl.depositMoney = async (req, res) => {
@@ -205,7 +205,7 @@ transactionCtrl.createTransaction = async (req, res) => {
 
       if (admin) {
         // Update sender-admin link
-        await linkCtrl.updateLink({ 
+        await linkCtrl.updateLink({
           senderName: sender.name,
           receiverName: admin.name,
           senderId: sender._id,
@@ -349,9 +349,11 @@ transactionCtrl.Distribute = async (user) => {
     // Sum up PR values for each participant
     for (const link of links) {
       const participant = await UserModel.findById(link.senderId);
-      totalPR += participant.public_rate;
-      console.log(participant.public_rate);
-      participants.push(participant);
+      if (participant.balance < participant.value) {
+        totalPR += participant.public_rate;
+        console.log(participant.public_rate);
+        participants.push(participant);
+      }
     }
 
     // Check if the user should also be considered as a participant
@@ -414,7 +416,7 @@ transactionCtrl.clearteDistributionTransaction = async (
         if (share >= linkValue) {
           // Adjust share if it exceeds the link value
           share = linkValue;
-          participant.balance += share;   
+          participant.balance += share;
           // participant.trxCount += 1;
           distributor.auxiliary -= share;
 
@@ -428,7 +430,7 @@ transactionCtrl.clearteDistributionTransaction = async (
           console.log(
             `Updated ${distributor.name}: Auxiliary = ${distributor.auxiliary}`
           );
- 
+
           // Delete the link if it is fully utilized
           await LinkModel.deleteOne({ _id: link._id });
 
@@ -438,7 +440,7 @@ transactionCtrl.clearteDistributionTransaction = async (
           //   await distributor.save();
           //   console.log(
           //     `Updated ${distributor.name}: Trigger = ${distributor.trigger}`
-          //   );  
+          //   );
           // } else {
           //   console.log(`Admin ${distributor.name} trigger not decremented.`);
           // }
