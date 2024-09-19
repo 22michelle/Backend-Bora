@@ -6,7 +6,7 @@ const router = new Router();
 
 // Routes
 router.post("/transaction",  transactionCtrl.createTransaction);
-router.get('/history/:accountNumber', transactionCtrl.getTransactionHistory);
+router.get('/history/:userId', transactionCtrl.getTransactionHistory);
 router.post("/deposit",  transactionCtrl.depositMoney);
 router.post("/withdraw",  transactionCtrl.withdrawMoney);
 router.get("/transactions", transactionCtrl.getAllTransactions);
