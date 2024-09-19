@@ -92,21 +92,6 @@ transactionCtrl.depositMoney = async (req, res) => {
     user.balance = (user.balance || 0) + depositAmount;
     user.value = await transactionCtrl.calculateValue(user); // Set value to match the new balance
 
-    // Create transaction Deposit
-    const transaction = await TransactionModel.create({
-      senderName: "Deposit", 
-      receiverName: user.name,
-      senderId: null, 
-      receiverId: user._id,
-      amount: depositAmount,
-      fee_rate: 0,
-      initialSenderBalance: null,
-      finalSenderBalance: user.balance,
-    });
-
-    // Save transaction history 
-    user.transactionHistory.push(transaction._id);
-
     // Save the updated user
     await user.save();
 
@@ -561,36 +546,21 @@ transactionCtrl.getTransactionHistory = async (req, res) => {
     const { accountNumber } = req.params;
 
     // Find user by account number
-    const user = await UserModel.findOne({ accountNumber }).populate(
-      "transactionHistory"
-    );
+    const user = await UserModel.findOne({ accountNumber }).populate('transactionHistory');
 
     if (!user) {
       return response(res, 404, false, "", "User not found");
     }
 
     // Populate transaction history with transaction details
-    const populatedUser = await UserModel.findById(user._id).populate(
-      "transactionHistory"
-    ); // Populating the transaction history with actual transaction data
+    const populatedUser = await UserModel.findById(user._id)
+      .populate('transactionHistory'); // Populating the transaction history with actual transaction data
 
     // Return the transaction history
-    return response(
-      res,
-      200,
-      true,
-      populatedUser.transactionHistory,
-      "Transaction history retrieved successfully"
-    );
+    return response(res, 200, true, populatedUser.transactionHistory, "Transaction history retrieved successfully");
   } catch (error) {
     console.error(`Error retrieving transaction history: ${error.message}`);
-    return response(
-      res,
-      500,
-      false,
-      null,
-      "Error retrieving transaction history"
-    );
+    return response(res, 500, false, null, "Error retrieving transaction history");
   }
 };
 
