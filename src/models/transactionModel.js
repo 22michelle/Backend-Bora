@@ -15,6 +15,10 @@ const TransactionSchema = new Schema(
       ref: "User",
       required: true,
     },
+    receiveraccountNumber: { 
+      type: String, 
+      required: true,
+    },
     senderName: { type: String },
     receiverName: { type: String },
     link: {
