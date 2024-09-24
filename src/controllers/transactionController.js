@@ -239,6 +239,7 @@ transactionCtrl.createTransaction = async (req, res) => {
     // Create transaction
     const transaction = await TransactionModel.create({
       receiveraccountNumber: receiver.accountNumber,
+      senderaccountNumber: sender.accountNumber,
       senderName: sender.name,
       receiverName: receiver.name,
       senderId: sender._id,
