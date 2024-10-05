@@ -23,7 +23,7 @@ const UserSchema = new Schema(
       lowercase: true,
       trim: true,
       match: [
-        /^[\w-]+@([\w-]+\.)+[\w-]{2,4}$/,
+        /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
         "Please enter a valid email address",
       ],
     },
@@ -42,7 +42,7 @@ const UserSchema = new Schema(
       required: true,
       default: 0,
     },
-    link_income: { 
+    link_income: {
       type: Number,
       required: true,
       default: 0,
@@ -52,7 +52,7 @@ const UserSchema = new Schema(
       required: true,
       default: 0,
     },
-    public_rate: {  
+    public_rate: {
       type: Number,
       required: true,
       default: 10,
